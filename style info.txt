@@ -1,0 +1,52 @@
+{
+    alignment = left;
+    blendingMode = Normal;
+    blur =     {
+        blurType = Gaussian;
+        center =         {
+            x = "0.5";
+            y = "0.5";
+        };
+        enabled = 0;
+        id = "9D67163E-40AB-4DF1-A97A-7352933548AA";
+        motionAngle = 0;
+        radius = 10;
+        type = Blur;
+    };
+    borderOptions =     {
+        dashPattern =         (
+        );
+        endArrowhead = None;
+        id = "4280E8C4-5EDA-4084-8E2C-F1FB28D15D74";
+        lineEnd = Butt;
+        lineJoin = Miter;
+        startArrowhead = None;
+        type = BorderOptions;
+    };
+    borders =     (
+    );
+    fills =     (
+    );
+    fontFamily = "Helvetica Neue";
+    fontSize = "61.03515625";
+    fontStretch = "<MOUndefined: 0x600004162420>";
+    fontStyle = "<MOUndefined: 0x600004162420>";
+    fontVariant = "<MOUndefined: 0x600004162420>";
+    fontWeight = 6;
+    id = "4280E8C4-5EDA-4084-8E2C-F1FB28D15D74";
+    innerShadows =     (
+    );
+    kerning = "<null>";
+    lineHeight = "73.2421875";
+    opacity = 1;
+    paragraphSpacing = 0;
+    shadows =     (
+    );
+    styleType = Text;
+    textColor = "#000000ff";
+    textStrikethrough = "<MOUndefined: 0x600004162420>";
+    textTransform = none;
+    textUnderline = "<MOUndefined: 0x600004162420>";
+    type = Style;
+    verticalAlignment = top;
+}
