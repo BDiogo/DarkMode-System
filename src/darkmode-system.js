@@ -37,17 +37,8 @@ export function switchLight(context) {
 
 
 export function createDarkmode(context) {
-
- /*
-
-  Settings.setSettingForKey('Styles', []);
-  Settings.setSettingForKey('Styles', []);
-
-  var get_settign_S=Settings.settingForKey('Styles');
+  DarkModeSystem(context,"darkmode");
   
-  console.log(get_settign_S);
-  */
-	DarkModeSystem(context,"darkmode");
 }
 
 
@@ -59,9 +50,6 @@ function DarkModeSystem(context,type) {
 
   var document = sketch.getSelectedDocument();
   
-	// Page variables
-	page = context.document.currentPage(),
-  pageInfo = page.userInfo();
   
   var fieldHeight = 22,
   fieldWidth = 60,
@@ -77,22 +65,42 @@ function DarkModeSystem(context,type) {
   
   
   // Setting variables
-  var get_settign_S=Settings.settingForKey('Styles');
+  var get_settign_S=Settings.documentSettingForKey(document, 'Styles');
   if(get_settign_S == null){
-    Settings.setSettingForKey('Styles', []);
+    Settings.setDocumentSettingForKey(document, 'Styles', []);
 
   }
 
 
+  // Setting variables
+  var get_settign_C=Settings.documentSettingForKey(document, 'Styles_Containers');
+  if(get_settign_C == null){
+    Settings.setDocumentSettingForKey(document, 'Styles_Containers', []);
+
+  }
+
+  // Setting variables
+  var get_settign_L=Settings.documentSettingForKey(document, 'Styles_Layers');
+  if(get_settign_L == null){
+    Settings.setDocumentSettingForKey(document, 'Styles_Layers', []);
+
+  }
+
+  // Setting variables
+  var get_settign_T=Settings.documentSettingForKey(document, 'Styles_Texts');
+  if(get_settign_T == null){
+    Settings.setDocumentSettingForKey(document, 'Styles_Texts', []);
+
+  }
 
 
   // ------- ------- ------- -------
   // darkmode AREA
 	// ------- ------- ------- -------  
 	if (type && type == "darkmode") {
+    console.log("entered darkmode");
     var document = sketch.getSelectedDocument();
-    var page = context.document.currentPage();
-    var s_styles= Settings.settingForKey('Styles');
+    var s_styles= Settings.documentSettingForKey(document, 'Styles');
     //Settings.setDocumentSettingForKey(document, 'Font', groupdefaultFont.indexOfSelectedItem());
     
     
@@ -180,9 +188,10 @@ function DarkModeSystem(context,type) {
   
   
       if (responseCode == 1000) { //create dark mode 
+          var all_settings= Settings.documentSettingForKey(document, 'Styles');
 
-          var reviewed_Settings= functions.reviewSettings(Settings, document);
-          Settings.setSettingForKey('Styles', reviewed_Settings);
+          var reviewed_Settings= functions.reviewSettings( document, all_settings);
+          Settings.setDocumentSettingForKey(document, 'Styles', reviewed_Settings);
 
         
           var s_page= selected_page.indexOfSelectedItem();
@@ -202,7 +211,10 @@ function DarkModeSystem(context,type) {
           var new_styles_ids=new_styles.new_styles;      
           var new_styles_withdark= functions.createDarkModeStyle(Settings, document, new_styles.layer, new_styles.text, new_styles.new_styles);
 
-          Settings.setSettingForKey('Styles', new_styles_withdark.settings);
+          Settings.setDocumentSettingForKey(document, 'Styles', new_styles_withdark.settings);
+          Settings.setDocumentSettingForKey(document, 'Styles_Containers', new_styles_withdark.settings_c);
+          Settings.setDocumentSettingForKey(document, 'Styles_Layers', new_styles_withdark.settings_l);
+          Settings.setDocumentSettingForKey(document, 'Styles_Texts', new_styles_withdark.settings_t);
 
           document.sharedLayerStyles=  new_styles_withdark.layer; 
           document.sharedTextStyles=  new_styles_withdark.text; 
@@ -220,11 +232,329 @@ function DarkModeSystem(context,type) {
       }
   }
   
+
+
+
+
+
+
+
+
+	// ------- ------- ------- -------
+  // switchLight AREA
+	// ------- ------- ------- -------  
+	else if (type && type == "switchDark") {
+    windowHeight = 90;
+    windowWidth = 300;
+
+    var document = sketch.getSelectedDocument();
+    var s_styles= Settings.documentSettingForKey(document, 'Styles');
+    //Settings.setDocumentSettingForKey(document, 'Font', groupdefaultFont.indexOfSelectedItem());
     
+    
+    //create Modal
+    var s_colors= Settings.documentSettingForKey(document, 'colors');
+
+
+		var alert = NSAlert.alloc().init(),
+		alertIconPath = context.plugin.urlForResourceNamed("icon.png").path(),
+		alertIcon = NSImage.alloc().initByReferencingFile(alertIconPath),
+		alertContent = NSView.alloc().init();
+    alertContent = NSView.alloc().initWithFrame(NSMakeRect(0, 0, windowWidth, windowHeight));
+
+
+
+    //FONT FAMILY
+    var pages_available=[];
+    for(var i=0; i<document.pages.length; i++){
+      //var all_shapes= sketch.find('Shape', document.pages[i]).length;
+      //var all_shapesPaths= sketch.find('ShapePath', document.pages[i]).length;
+      //var all_texts= sketch.find('Text', document.pages[i]).length;
+      //var total= all_shapes+all_shapesPaths+all_texts;
+      pages_available.push(document.pages[i].name);
+    }
+
+    var selected_page = functions.createPopUpButton(pages_available,0,NSMakeRect(0,settingY,windowWidth,fieldHeight));
+    alertContent.addSubview(selected_page);
+    
+
+    settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
+    var groupdefaultFont_label = functions.createBoldLabel("Select Page to Transform",15,NSMakeRect(0,settingY + textOffset,windowWidth,labelHeight));
+    alertContent.addSubview(groupdefaultFont_label);
+
+    
+
+		alert.setIcon(alertIcon);
+		alert.setMessageText("Switch to Light Mode ");
+    alert.accessoryView = alertContent;
+
+      //BUTTONS
+      var buttonOrganize = alert.addButtonWithTitle("Switch Dark");
+      var buttonCancel = alert.addButtonWithTitle("Cancel");
+      var responseCode = alert.runModal();
+  
+  
+      if (responseCode == 1000) { //create dark mode 
+        var s_page= selected_page.indexOfSelectedItem();
+        //functions.SwitchDarkMode(document ,layers, new_styles_withdark.layer, new_styles_withdark.text, false);
+        var count= functions.SwitchDarkMode_best(Settings, sketch, document, s_page , document.sharedLayerStyles, document.sharedTextStyles, true);
+
+        if(count>0){
+          sketch.UI.message(' Switched '+count+' Layers to Dark Mode Sucessfully!'); 
+        }else{
+          sketch.UI.message(" All layers are already in Dark Mode or haven't created a DarkMode System"); 
+
+        }
+    }
+  }
+
+  
+
+  	// ------- ------- ------- -------
+  // switchLight AREA
+	// ------- ------- ------- -------  
+	else if (type && type == "switchLight") {
+    windowHeight = 90;
+    windowWidth = 300;
+
+    var document = sketch.getSelectedDocument();
+    var s_styles= Settings.documentSettingForKey(document, 'Styles');
+    //Settings.setDocumentSettingForKey(document, 'Font', groupdefaultFont.indexOfSelectedItem());
+    
+    
+    //create Modal
+    var s_colors= Settings.documentSettingForKey(document, 'colors');
+
+
+		var alert = NSAlert.alloc().init(),
+		alertIconPath = context.plugin.urlForResourceNamed("icon.png").path(),
+		alertIcon = NSImage.alloc().initByReferencingFile(alertIconPath),
+		alertContent = NSView.alloc().init();
+    alertContent = NSView.alloc().initWithFrame(NSMakeRect(0, 0, windowWidth, windowHeight));
+
+
+
+    //FONT FAMILY
+    var pages_available=[];
+    for(var i=0; i<document.pages.length; i++){
+      //var all_shapes= sketch.find('Shape', document.pages[i]).length;
+      //var all_shapesPaths= sketch.find('ShapePath', document.pages[i]).length;
+      //var all_texts= sketch.find('Text', document.pages[i]).length;
+      //var total= all_shapes+all_shapesPaths+all_texts;
+      pages_available.push(document.pages[i].name);
+    }
+
+    var selected_page = functions.createPopUpButton(pages_available,0,NSMakeRect(0,settingY,windowWidth,fieldHeight));
+    alertContent.addSubview(selected_page);
+    
+
+    settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
+    var groupdefaultFont_label = functions.createBoldLabel("Select Page to Transform",15,NSMakeRect(0,settingY + textOffset,windowWidth,labelHeight));
+    alertContent.addSubview(groupdefaultFont_label);
+
+    
+
+		alert.setIcon(alertIcon);
+		alert.setMessageText("Switch to Light Mode ");
+    alert.accessoryView = alertContent;
+
+      //BUTTONS
+      var buttonOrganize = alert.addButtonWithTitle("Switch Light");
+      var buttonCancel = alert.addButtonWithTitle("Cancel");
+      var responseCode = alert.runModal();
+  
+  
+      if (responseCode == 1000) { //create dark mode 
+        var s_page= selected_page.indexOfSelectedItem();
+        //functions.SwitchDarkMode(document ,layers, new_styles_withdark.layer, new_styles_withdark.text, false);
+        var count= functions.SwitchDarkMode_best(Settings, sketch, document, s_page , document.sharedLayerStyles, document.sharedTextStyles, false);
+
+        if(count>0){
+          sketch.UI.message(' Switched '+count+' Layers to Light Mode Sucessfully!'); 
+        }else{
+          sketch.UI.message(" All layers are already in Light Mode or haven't created a DarkMode System"); 
+
+        }
+    }
+  }
+
+
+
+
+  
+	// ------- ------- ------- -------
+  // SETTINGS AREA
+	// ------- ------- ------- -------  
+	else if (type && type == "settings") {
+
+    windowHeight = 460;
+    windowWidth = 800;
+    var all_settings= Settings.documentSettingForKey(document, 'Styles');
+    var all_settings_c= Settings.documentSettingForKey(document, 'Styles_Containers');
+    var all_settings_l= Settings.documentSettingForKey(document, 'Styles_Layers');
+    var all_settings_t= Settings.documentSettingForKey(document, 'Styles_Texts');
+    var scrolHeight= ((all_settings.length*(labelHeight+settingPad))+100)*2;
+
+		var alert = NSAlert.alloc().init(),
+		alertIconPath = context.plugin.urlForResourceNamed("icon.png").path(),
+    alertIcon = NSImage.alloc().initByReferencingFile(alertIconPath),
+
+    //scroll
+    alertscroll = NSScrollView.alloc().initWithFrame(NSMakeRect(0, 0, windowWidth, windowHeight)),
+    
+    //content
+    alertContent = NSView.alloc().initWithFrame(NSMakeRect(0, 0, windowWidth, scrolHeight));
+    alertContent.setFlipped(1);
+
+
+    alertscroll.setHasVerticalScroller(1);
+    alertscroll.setDocumentView(alertContent);  
+    
+    var col_1=440
+    var col=(windowWidth/2)-(col_1/2)-10+100;
+
+    //LABELS
+    var title_color_0 = functions.createBoldLabel("Type",12,NSMakeRect(0,settingY ,col_1,labelHeight));
+    alertContent.addSubview(title_color_0);
+    var title_color_1 = functions.createBoldLabel("In Colored",12,NSMakeRect(120,settingY ,col_1,labelHeight));
+    alertContent.addSubview(title_color_1);
+    var title_color_2 = functions.createBoldLabel("Light Style",12,NSMakeRect((col_1/2)-10,settingY ,col,labelHeight));
+    alertContent.addSubview(title_color_2);
+    var title_color_3 = functions.createBoldLabel("Dark Style",12,NSMakeRect((col+(col_1/2)-10),settingY ,col,labelHeight));
+    alertContent.addSubview(title_color_3);
+
+    var light_name=[];
+    var dark_name=[];
+    var type=[];
+    var colored_container=[];
+    //console.log(all_settings);
+
+    for(var j=0; j<3; j++){
+      var i=0;
+
+      if(j==0){
+            all_settings= all_settings_c;
+      }else if(j==1){
+            all_settings= all_settings_l;
+      }else{
+            all_settings= all_settings_t;
+      }
+      for(var k=0; k<all_settings.length;k++){
+        settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
+        
+        var dark_id= all_settings[i].dark;
+        var light_id= all_settings[i].light;
+    
+        if(all_settings[i].type=="text"){
+          var sharedStyle_light = document.getSharedTextStyleWithID(light_id);
+          var sharedStyle_dark = document.getSharedTextStyleWithID(dark_id);
+          type[i] = functions.createLabel(all_settings[i].element,12,NSMakeRect(0,settingY + textOffset,col_1,labelHeight));
+          alertContent.addSubview(type[i]);
+        }else{
+          var sharedStyle_light = document.getSharedLayerStyleWithID(light_id);
+          var sharedStyle_dark = document.getSharedLayerStyleWithID(dark_id);
+          type[i] = functions.createLabel(all_settings[i].element,12,NSMakeRect(0,settingY + textOffset,col_1,labelHeight));
+          alertContent.addSubview(type[i]);
+          
+        }
+          //console.log(sharedStyle_dark);
+          //console.log(sharedStyle_light);
+          colored_container[i] = functions.createLabel(String(all_settings[i].colored_container),12,NSMakeRect(120,settingY + textOffset,col_1,labelHeight));
+          alertContent.addSubview(colored_container[i]);
+
+        if(sharedStyle_light===undefined || sharedStyle_dark===undefined){
+          light_name[i] = functions.createLabel("-",12,NSMakeRect((col_1/2)-10,settingY + textOffset,windowWidth-leftColWidth,labelHeight));
+          alertContent.addSubview(light_name[i]);
+          dark_name[i] = functions.createLabel("-",12,NSMakeRect((col+(col_1/2)-10),settingY + textOffset,windowWidth-leftColWidth,labelHeight));
+          alertContent.addSubview(dark_name[i]);
+        // console.log("there is one settings missing");
+        }else{
+          light_name[i] = functions.createLabel(sharedStyle_light.name,12,NSMakeRect((col_1/2)-10,settingY + textOffset,windowWidth-leftColWidth,labelHeight));
+          alertContent.addSubview(light_name[i]);
+          dark_name[i] = functions.createLabel(sharedStyle_dark.name,12,NSMakeRect((col+(col_1/2)-10),settingY + textOffset,windowWidth-leftColWidth,labelHeight));
+          alertContent.addSubview(dark_name[i]);
+        }
+        i++;
+      }
+
+    }
+
+    alert.setIcon(alertIcon);
+		alert.setMessageText("Edit Settings");
+		alert.setInformativeText("Here you can setup some of the variables that help you generate and edit your DarkMode Systems.");
+
+		alert.accessoryView = alertscroll;
+		var responseCode = alert.runModal();
+
+		if (responseCode == 1000) {
+      return false;
+			
+		} else return false;
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+ // ------------------------------------------------
+  // create a Delete All Style System
+  // ------------------------------------------------
+  else if (type && type == "deletesettings") {
+    windowHeight = 10;
+    windowWidth = 400;
+    
+    var alert = NSAlert.alloc().init(),
+    alertIconPath = context.plugin.urlForResourceNamed("icon.png").path(),
+    alertIcon = NSImage.alloc().initByReferencingFile(alertIconPath),
+    alertContent = NSView.alloc().init();
+    alertContent = NSView.alloc().initWithFrame(NSMakeRect(0, 0, windowWidth, windowHeight));
+
+    alert.setIcon(alertIcon);
+    alert.setMessageText("Delete All Settings ");
+    alert.setInformativeText("Are you Sure You want to delete all "+get_settign_S.length+" styles? This will not delete the shared styles connected to the layers, but the setting connecting the 2.");
+    alert.accessoryView = alertContent;
+
+
+    //BUTTONS
+    var buttonOrganize = alert.addButtonWithTitle("Delete All");
+    var buttonOrganize2 = alert.addButtonWithTitle("Delete Unused");
+    var buttonCancel = alert.addButtonWithTitle("Cancel");
+    // RUN MODAL
+    var responseCode = alert.runModal();
+   // log(styles_list);
+    if (responseCode == 1000) {
+      var all_settings= Settings.documentSettingForKey(document, 'Styles');
+
+      sketch.UI.message(' Deleted All! '+all_settings.length+' styles, sucessfully!');
+      Settings.setDocumentSettingForKey('Styles', []);
+
+    }else if (responseCode == 1001) {
+      var all_settings= Settings.documentSettingForKey(document, 'Styles');
+
+      var reviewed_Settings= functions.reviewSettings( document , all_settings);
+      Settings.setDocumentSettingForKey('Styles', reviewed_Settings);
+
+      var deleted= all_settings.length-reviewed_Settings.length;
+
+      sketch.UI.message(' Deleted '+deleted+' Settings , sucessfully! You now have '+reviewed_Settings.length+" Settings!");
+
+    }
+
+  }
+
+
+      
   // ------- ------- ------- -------
   // Colors AREA
 	// ------- ------- ------- -------  
-	if (type && type == "colors") {
+	else if (type && type == "colors") {
     var count=0;
    
    
@@ -507,313 +837,6 @@ function DarkModeSystem(context,type) {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-	// ------- ------- ------- -------
-  // switchLight AREA
-	// ------- ------- ------- -------  
-	else if (type && type == "switchDark") {
-    windowHeight = 90;
-    windowWidth = 300;
-
-    var document = sketch.getSelectedDocument();
-    var page = context.document.currentPage();
-    var s_styles= Settings.settingForKey('Styles');
-    //Settings.setDocumentSettingForKey(document, 'Font', groupdefaultFont.indexOfSelectedItem());
-    
-    
-    //create Modal
-    var s_colors= Settings.documentSettingForKey(document, 'colors');
-
-
-		var alert = NSAlert.alloc().init(),
-		alertIconPath = context.plugin.urlForResourceNamed("icon.png").path(),
-		alertIcon = NSImage.alloc().initByReferencingFile(alertIconPath),
-		alertContent = NSView.alloc().init();
-    alertContent = NSView.alloc().initWithFrame(NSMakeRect(0, 0, windowWidth, windowHeight));
-
-
-
-    //FONT FAMILY
-    var pages_available=[];
-    for(var i=0; i<document.pages.length; i++){
-      //var all_shapes= sketch.find('Shape', document.pages[i]).length;
-      //var all_shapesPaths= sketch.find('ShapePath', document.pages[i]).length;
-      //var all_texts= sketch.find('Text', document.pages[i]).length;
-      //var total= all_shapes+all_shapesPaths+all_texts;
-      pages_available.push(document.pages[i].name);
-    }
-
-    var selected_page = functions.createPopUpButton(pages_available,0,NSMakeRect(0,settingY,windowWidth,fieldHeight));
-    alertContent.addSubview(selected_page);
-    
-
-    settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
-    var groupdefaultFont_label = functions.createBoldLabel("Select Page to Transform",15,NSMakeRect(0,settingY + textOffset,windowWidth,labelHeight));
-    alertContent.addSubview(groupdefaultFont_label);
-
-    
-
-		alert.setIcon(alertIcon);
-		alert.setMessageText("Switch to Light Mode ");
-    alert.accessoryView = alertContent;
-
-      //BUTTONS
-      var buttonOrganize = alert.addButtonWithTitle("Switch Dark");
-      var buttonCancel = alert.addButtonWithTitle("Cancel");
-      var responseCode = alert.runModal();
-  
-  
-      if (responseCode == 1000) { //create dark mode 
-        var s_page= selected_page.indexOfSelectedItem();
-        //functions.SwitchDarkMode(document ,layers, new_styles_withdark.layer, new_styles_withdark.text, false);
-        var count= functions.SwitchDarkMode_best(Settings, sketch, document, s_page , document.sharedLayerStyles, document.sharedTextStyles, true);
-
-        if(count>0){
-          sketch.UI.message(' Switched '+count+' Layers to Dark Mode Sucessfully!'); 
-        }else{
-          sketch.UI.message(" All layers are already in Dark Mode or haven't created a DarkMode System"); 
-
-        }
-    }
-  }
-
-  
-
-  	// ------- ------- ------- -------
-  // switchLight AREA
-	// ------- ------- ------- -------  
-	else if (type && type == "switchLight") {
-    windowHeight = 90;
-    windowWidth = 300;
-
-    var document = sketch.getSelectedDocument();
-    var page = context.document.currentPage();
-    var s_styles= Settings.settingForKey('Styles');
-    //Settings.setDocumentSettingForKey(document, 'Font', groupdefaultFont.indexOfSelectedItem());
-    
-    
-    //create Modal
-    var s_colors= Settings.documentSettingForKey(document, 'colors');
-
-
-		var alert = NSAlert.alloc().init(),
-		alertIconPath = context.plugin.urlForResourceNamed("icon.png").path(),
-		alertIcon = NSImage.alloc().initByReferencingFile(alertIconPath),
-		alertContent = NSView.alloc().init();
-    alertContent = NSView.alloc().initWithFrame(NSMakeRect(0, 0, windowWidth, windowHeight));
-
-
-
-    //FONT FAMILY
-    var pages_available=[];
-    for(var i=0; i<document.pages.length; i++){
-      //var all_shapes= sketch.find('Shape', document.pages[i]).length;
-      //var all_shapesPaths= sketch.find('ShapePath', document.pages[i]).length;
-      //var all_texts= sketch.find('Text', document.pages[i]).length;
-      //var total= all_shapes+all_shapesPaths+all_texts;
-      pages_available.push(document.pages[i].name);
-    }
-
-    var selected_page = functions.createPopUpButton(pages_available,0,NSMakeRect(0,settingY,windowWidth,fieldHeight));
-    alertContent.addSubview(selected_page);
-    
-
-    settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
-    var groupdefaultFont_label = functions.createBoldLabel("Select Page to Transform",15,NSMakeRect(0,settingY + textOffset,windowWidth,labelHeight));
-    alertContent.addSubview(groupdefaultFont_label);
-
-    
-
-		alert.setIcon(alertIcon);
-		alert.setMessageText("Switch to Light Mode ");
-    alert.accessoryView = alertContent;
-
-      //BUTTONS
-      var buttonOrganize = alert.addButtonWithTitle("Switch Light");
-      var buttonCancel = alert.addButtonWithTitle("Cancel");
-      var responseCode = alert.runModal();
-  
-  
-      if (responseCode == 1000) { //create dark mode 
-        var s_page= selected_page.indexOfSelectedItem();
-        //functions.SwitchDarkMode(document ,layers, new_styles_withdark.layer, new_styles_withdark.text, false);
-        var count= functions.SwitchDarkMode_best(Settings, sketch, document, s_page , document.sharedLayerStyles, document.sharedTextStyles, false);
-
-        if(count>0){
-          sketch.UI.message(' Switched '+count+' Layers to Light Mode Sucessfully!'); 
-        }else{
-          sketch.UI.message(" All layers are already in Light Mode or haven't created a DarkMode System"); 
-
-        }
-    }
-  }
-
-
-
-
-  
-	// ------- ------- ------- -------
-  // SETTINGS AREA
-	// ------- ------- ------- -------  
-	else if (type && type == "settings") {
-
-    windowHeight = 460;
-    windowWidth = 800;
-    var all_settings= Settings.settingForKey('Styles');
-    var scrolHeight= (all_settings.length*(labelHeight+settingPad))+100;
-
-		var alert = NSAlert.alloc().init(),
-		alertIconPath = context.plugin.urlForResourceNamed("icon.png").path(),
-    alertIcon = NSImage.alloc().initByReferencingFile(alertIconPath),
-
-    //scroll
-    alertscroll = NSScrollView.alloc().initWithFrame(NSMakeRect(0, 0, windowWidth, windowHeight)),
-    
-    //content
-    alertContent = NSView.alloc().initWithFrame(NSMakeRect(0, 0, windowWidth, scrolHeight));
-    alertContent.setFlipped(1);
-
-
-    alertscroll.setHasVerticalScroller(1);
-    alertscroll.setDocumentView(alertContent);  
-    
-
-    var col=(windowWidth/2)-60;
-
-    //LABELS
-    var title_color_1 = functions.createBoldLabel("Type",12,NSMakeRect(0,settingY ,100,labelHeight));
-    alertContent.addSubview(title_color_1);
-    var title_color_2 = functions.createBoldLabel("Light Style",12,NSMakeRect(60,settingY ,col,labelHeight));
-    alertContent.addSubview(title_color_2);
-    var title_color_3 = functions.createBoldLabel("Dark Style",12,NSMakeRect((col+60),settingY ,col,labelHeight));
-    alertContent.addSubview(title_color_3);
-
-    var light_name=[];
-    var dark_name=[];
-    var type=[];
-    console.log(all_settings);
-
-    for(var i=0; i<all_settings.length; i++){
-      settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
-      
-      var dark_id= all_settings[i].dark;
-      var light_id= all_settings[i].light;
-  
-      if(all_settings[i].type=="text"){
-        var sharedStyle_light = document.getSharedTextStyleWithID(light_id);
-        var sharedStyle_dark = document.getSharedTextStyleWithID(dark_id);
-        type[i] = functions.createLabel(all_settings[i].element,12,NSMakeRect(0,settingY + textOffset,100,labelHeight));
-        alertContent.addSubview(type[i]);
-      }else{
-        var sharedStyle_light = document.getSharedLayerStyleWithID(light_id);
-        var sharedStyle_dark = document.getSharedLayerStyleWithID(dark_id);
-        type[i] = functions.createLabel(all_settings[i].element,12,NSMakeRect(0,settingY + textOffset,100,labelHeight));
-        alertContent.addSubview(type[i]);
-        
-      }
-        //console.log(sharedStyle_dark);
-        //console.log(sharedStyle_light);
-  
-      if(sharedStyle_light===undefined || sharedStyle_dark===undefined){
-        light_name[i] = functions.createLabel("-",12,NSMakeRect(60,settingY + textOffset,windowWidth-leftColWidth,labelHeight));
-        alertContent.addSubview(light_name[i]);
-        dark_name[i] = functions.createLabel("-",12,NSMakeRect((col+60),settingY + textOffset,windowWidth-leftColWidth,labelHeight));
-        alertContent.addSubview(dark_name[i]);
-       // console.log("there is one settings missing");
-      }else{
-        light_name[i] = functions.createLabel(sharedStyle_light.name,12,NSMakeRect(60,settingY + textOffset,windowWidth-leftColWidth,labelHeight));
-        alertContent.addSubview(light_name[i]);
-        dark_name[i] = functions.createLabel(sharedStyle_dark.name,12,NSMakeRect((col+60),settingY + textOffset,windowWidth-leftColWidth,labelHeight));
-        alertContent.addSubview(dark_name[i]);
-      }
-  
-    }
-
-
-
-    alert.setIcon(alertIcon);
-		alert.setMessageText("Edit Settings");
-		alert.setInformativeText("Here you can setup some of the variables that help you generate and edit your DarkMode Systems.");
-
-		alert.accessoryView = alertscroll;
-		var responseCode = alert.runModal();
-
-		if (responseCode == 1000) {
-
-
-        //userDefaults.synchronize();
-        sketch.UI.message(' Updated Sucessfully');
-        
-        
-			
-		} else return false;
-  }
-
-
-
-
-
-
-
-
-
-
-
-
- // ------------------------------------------------
-  // create a Delete All Style System
-  // ------------------------------------------------
-  else if (type && type == "deletesettings") {
-    windowHeight = 10;
-    windowWidth = 400;
-    
-    var alert = NSAlert.alloc().init(),
-    alertIconPath = context.plugin.urlForResourceNamed("icon.png").path(),
-    alertIcon = NSImage.alloc().initByReferencingFile(alertIconPath),
-    alertContent = NSView.alloc().init();
-    alertContent = NSView.alloc().initWithFrame(NSMakeRect(0, 0, windowWidth, windowHeight));
-
-    alert.setIcon(alertIcon);
-    alert.setMessageText("Delete All Settings ");
-    alert.setInformativeText("Are you Sure You want to delete all "+get_settign_S.length+" styles? This will not delete the shared styles connected to the layers, but the setting connecting the 2.");
-    alert.accessoryView = alertContent;
-
-
-    //BUTTONS
-    var buttonOrganize = alert.addButtonWithTitle("Delete All");
-    var buttonOrganize2 = alert.addButtonWithTitle("Delete Unused");
-    var buttonCancel = alert.addButtonWithTitle("Cancel");
-    // RUN MODAL
-    var responseCode = alert.runModal();
-   // log(styles_list);
-    if (responseCode == 1000) {
-      var all_settings= Settings.settingForKey('Styles');
-
-      sketch.UI.message(' Deleted All! '+all_settings.length+' styles, sucessfully!');
-      Settings.setSettingForKey('Styles', []);
-
-    }else if (responseCode == 1001) {
-      var all_settings= Settings.settingForKey('Styles');
-
-      var reviewed_Settings= functions.reviewSettings(Settings, document);
-      Settings.setSettingForKey('Styles', reviewed_Settings);
-
-      var deleted= all_settings.length-reviewed_Settings.length;
-
-      sketch.UI.message(' Deleted '+deleted+' Settings , sucessfully! You now have '+reviewed_Settings.length+" Settings!");
-
-    }
-
-  }
 }
 
 

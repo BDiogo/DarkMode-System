@@ -14,6 +14,10 @@
     ],
     "sketch-assets-file": "sketch-assets/icons.sketch"
   },
+  "repository" : {
+     "type": "git",
+     "url": "git+https://github.com/BDiogo/DarkMode-System.git"
+  },
   "scripts": {
     "build": "skpm-build",
     "watch": "skpm-build --watch",

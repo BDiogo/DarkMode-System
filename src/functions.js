@@ -1360,10 +1360,7 @@ function getLayerArtboard(p){
   return artboar_id;
 
 }
-export function reviewSettings(Settings,  document){
-
-  var all_settings= Settings.settingForKey('Styles');
-
+export function reviewSettings( document , all_settings){
   console.log("Step 0 - Reviewing Settings...");
   //console.log(all_settings);
   var reviewed_settings=[]
@@ -1403,7 +1400,10 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
   var count_added=document.sharedLayerStyles.length+document.sharedTextStyles.length;
 
 
-  var all_settings= Settings.settingForKey('Styles');
+  var all_settings= Settings.documentSettingForKey(document,'Styles');
+  var all_settings_c= Settings.documentSettingForKey(document,'Styles_Containers');
+  var all_settings_l= Settings.documentSettingForKey(document,'Styles_Layers');
+  var all_settings_t= Settings.documentSettingForKey(document,'Styles_Texts');
 
   console.log("initial styles"+count_added);
   console.log("Step 1 - Validating...");
@@ -1418,10 +1418,13 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
   var container_min_height=200;
 
 
+  var count_c= all_settings_c.length;
+  var count_l= all_settings_l.length;
+  var count_t= all_settings_t.length;
 
   // DO CONTAINERS
   var percentage=0;
-  var count_shapePath_added=0;
+  var count_container_added=count_c;
   for(var i=0; i<all_shapesPaths.length;i++ ){
     if(all_shapesPaths[i].frame.width>container_min_width && all_shapesPaths[i].frame.height>container_min_height  && all_shapesPaths[i].shapeType=="Rectangle"){
       count++;
@@ -1454,14 +1457,16 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
       var is_inside_colored_container= false;
 
      if(!hasStyle || hasStyle && isOutOfSync ){
-       var hasMatchingStyle= elementHasMatchingStyle(layer_styles, all_shapesPaths[i].style);
+      
+       var hasMatchingStyle= elementHasMatchingStyleAndSetting(document,layer_styles, all_shapesPaths[i].style, all_settings_c, all_settings_l, all_settings_t, undefined, ["layer","layer","text"]);
+       //var hasMatchingStyle= elementHasMatchingStyle(layer_styles, all_shapesPaths[i].style);
 
        // get setting with macthcing style
        var hasmach_butnot=false;
         if(hasMatchingStyle){
-          for (var n=0; n<all_settings.length; n++){
-            if(all_settings[n].light==hasMatchingStyle.id){
-              if(all_settings[n].element != container){
+          for (var n=0; n<all_settings_c.length; n++){
+            if(all_settings_c[n].light==hasMatchingStyle.id){
+              if(all_settings_c[n].element != container){
                 hasmach_butnot_setting=true;
                 break;
               }else{
@@ -1472,8 +1477,8 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
         }
        if(!hasMatchingStyle || hasmach_butnot){
          //create new style
-         count_shapePath_added++;
-         layer_styles= addNewStyle(document,"Shape","Layer", all_shapesPaths[i].style, count_shapePath_added,layer_styles) ;
+         count_container_added++;
+         layer_styles= addNewStyle(document,"Contsainer","Layer", all_shapesPaths[i].style, count_container_added,layer_styles) ;
  
          //update element
          var last =layer_styles.length-1;
@@ -1505,7 +1510,7 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
         }
         //console.log("COLORED CONTAINER!!!"); 
     
-         var hasSettings=ifStylesavedInSettings(document, all_settings,new_styles, hasMatchingStyle.id, "layer");
+         var hasSettings=ifStylesavedInSettings(document, all_settings_c,new_styles, hasMatchingStyle.id, "layer");
          if(!hasSettings){
           new_styles.push({"action":"link", "type": "layer","element":container, "id":hasMatchingStyle.id});
          }
@@ -1525,7 +1530,7 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
       }
       //console.log("COLORED CONTAINER!!!"); 
        
-      var hasSettings=ifStylesavedInSettings(document, all_settings,new_styles, hasStyle.id, "layer");
+      var hasSettings=ifStylesavedInSettings(document, all_settings_c,new_styles, hasStyle.id, "layer");
       if(!hasSettings){
         new_styles.push({"action":"save_setting", "type": "layer","element":container, "id":hasStyle.id});
         }
@@ -1533,6 +1538,8 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
     }
   }
 
+
+  var count_shapePath_added=count_l;
   // DO SHAPES PATHS
   for(var i=0; i<all_shapesPaths.length;i++ ){
     if(all_shapesPaths[i].frame.width<container_min_width || all_shapesPaths[i].frame.height<container_min_height  || all_shapesPaths[i].shapeType!="Rectangle"){
@@ -1560,7 +1567,8 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
      var is_inside_colored_container= TextinsideColoredContainer(all_shapesPaths[i], colored_containers);
 
      if(!hasStyle || hasStyle && isOutOfSync ){
-       var hasMatchingStyle= elementHasMatchingStyle(layer_styles, all_shapesPaths[i].style);
+       //var hasMatchingStyle= elementHasMatchingStyle(layer_styles, all_shapesPaths[i].style);
+       var hasMatchingStyle= elementHasMatchingStyleAndSetting(document,layer_styles, all_shapesPaths[i].style, all_settings_l, all_settings_c, all_settings_t, is_inside_colored_container, ["layer","layer","text"]);
 
        // is has matching style but one is hover a colored container and the other is not
        var hasmach_butnot=false;
@@ -1577,24 +1585,11 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
             }
           }
         }
-        var hasmach_butnot_setting=false;
-        if(hasMatchingStyle && !hasmach_butnot){
-          for (var n=0; n<all_settings.length; n++){
-            if(all_settings[n].light==hasMatchingStyle.id){
-              if(all_settings[n].element != element_size){
-                hasmach_butnot_setting=true;
-                break;
-              }else{
-                break;
-              }
-
-            }
-          }
-        }
-       if(!hasMatchingStyle || hasmach_butnot || hasmach_butnot_setting){
+        
+       if(!hasMatchingStyle || hasmach_butnot ){
          //create new style
          count_shapePath_added++;
-         layer_styles= addNewStyle(document,"Shape","Layer", all_shapesPaths[i].style, count_shapePath_added,layer_styles) ;
+         layer_styles= addNewStyle(document,"ShapePath","Layer", all_shapesPaths[i].style, count_shapePath_added,layer_styles) ;
  
          //update element
          var last =layer_styles.length-1;
@@ -1608,7 +1603,7 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
          updateElementStyle(all_shapesPaths[i], hasMatchingStyle);
 
          //add setting if it doesn't exist
-         var hasSettings=ifStylesavedInSettings(document, all_settings,new_styles, hasMatchingStyle.id, "layer");
+         var hasSettings=ifStylesavedInSettings(document, all_settings_l,new_styles, hasMatchingStyle.id, "layer");
          if(!hasSettings){
            new_styles.push({"action":"link", "type": "layer","colored_container":is_inside_colored_container,"element":element_size, "id":hasMatchingStyle.id, "layerName": all_shapesPaths[i].name});
          }
@@ -1619,7 +1614,7 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
        updateElementStyle(all_shapesPaths[i], hasStyle);
 
       //add setting if it doesn't exist
-      var hasSettings=ifStylesavedInSettings(document, all_settings,new_styles, hasStyle.id, "layer");
+      var hasSettings=ifStylesavedInSettings(document, all_settings_l,new_styles, hasStyle.id, "layer");
       if(!hasSettings){
         new_styles.push({"action":"save_setting", "type": "layer","colored_container":is_inside_colored_container,"element": element_size, "id":hasStyle.id, "layerName": all_shapesPaths[i].name});
  
@@ -1630,7 +1625,7 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
 
   //DO SHAPES
   var percentage=0;
-  var count_shape_added=0;
+  var count_shape_added=count_shapePath_added;
   for(var i=0; i<all_shapes.length;i++ ){
     count++;
     //progress
@@ -1649,7 +1644,9 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
     var is_inside_colored_container= TextinsideColoredContainer(all_shapes[i], colored_containers);
 
     if(!hasStyle || hasStyle && isOutOfSync ){
-      var hasMatchingStyle= elementHasMatchingStyle(layer_styles, all_shapes[i].style);
+      //var hasMatchingStyle= elementHasMatchingStyle(layer_styles, all_shapes[i].style);
+      var hasMatchingStyle= elementHasMatchingStyleAndSetting(document,layer_styles, all_shapes[i].style, all_settings_l, all_settings_c, all_settings_t, is_inside_colored_container, ["layer","layer","text"]);
+
        // is has matching style but one is hover a colored container and the other is not
        var hasmach_butnot=false;
         if(hasMatchingStyle){
@@ -1667,21 +1664,7 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
             
           }
         }
-        var hasmach_butnot_setting=false;
-        if(hasMatchingStyle && !hasmach_butnot){
-          for (var n=0; n<all_settings.length; n++){
-            if(all_settings[n].light==hasMatchingStyle.id){
-              if(all_settings[n].element != element_size){
-                hasmach_butnot_setting=true;
-                break;
-              }else{
-                break;
-              }
-
-            }
-          }
-        }
-       if(!hasMatchingStyle || hasmach_butnot || hasmach_butnot_setting){
+       if(!hasMatchingStyle || hasmach_butnot ){
         //create new style
         count_shape_added++;
         layer_styles= addNewStyle(document,"Shape","Layer", all_shapes[i].style, count_shape_added, layer_styles) ;
@@ -1698,7 +1681,7 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
         updateElementStyle(all_shapes[i], hasMatchingStyle);
 
         //add setting if it doesn't exist
-        var hasSettings=ifStylesavedInSettings(document, all_settings,new_styles, hasMatchingStyle.id, "layer");
+        var hasSettings=ifStylesavedInSettings(document, all_settings_l,new_styles, hasMatchingStyle.id, "layer");
         if(!hasSettings){
           new_styles.push({"action":"link", "type": "layer","colored_container":is_inside_colored_container, "element": element_size, "id":hasMatchingStyle.id, "layerName": all_shapes[i].name});
         }
@@ -1709,7 +1692,7 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
       updateElementStyle(all_shapes[i], hasStyle);
 
       //add setting if it doesn't exist
-      var hasSettings=ifStylesavedInSettings(document, all_settings,new_styles, hasStyle.id, "layer");
+      var hasSettings=ifStylesavedInSettings(document, all_settings_l,new_styles, hasStyle.id, "layer");
       if(!hasSettings){
         new_styles.push({"action":"save_setting", "type": "layer", "colored_container":is_inside_colored_container, "element":element_size, "id":hasStyle.id, "layerName": all_shapes[i].name});
 
@@ -1720,7 +1703,7 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
   
   //DO TEXTS
   var percentage=0;
-  var count_text_added=0;
+  var count_text_added=count_t;
   for(var i=0; i<all_texts.length;i++ ){
     count++;
     if(percentage != parseInt(i*100 /all_texts.length)){
@@ -1737,7 +1720,9 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
     var is_inside_colored_container= TextinsideColoredContainer(all_texts[i], colored_containers);
 
     if(!hasStyle || hasStyle && isOutOfSync ){
-      var hasMatchingStyle= elementHasMatchingStyle(text_styles, all_texts[i].style);    
+      //var hasMatchingStyle= elementHasMatchingStyle(text_styles, all_texts[i].style); 
+      var hasMatchingStyle= elementHasMatchingStyleAndSetting(document,text_styles, all_texts[i].style, all_settings_t, all_settings_c, all_settings_l, is_inside_colored_container, ["text","layer","layer"]);
+
       // is has matching style but one is hover a colored container and the other is not
       var hasmach_butnot=false;
       var hasmach_butnot_setting=false;
@@ -1758,9 +1743,9 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
       }
       var hasmach_butnot_setting=false;
       if(hasMatchingStyle && !hasmach_butnot){
-        for (var n=0; n<all_settings.length; n++){
-          if(all_settings[n].light==hasMatchingStyle.id){
-            if(all_settings[n].element != "text"){
+        for (var n=0; n<all_settings_t.length; n++){
+          if(all_settings_t[n].light==hasMatchingStyle.id){
+            if(all_settings_t[n].element != "text"){
               hasmach_butnot_setting=true;
               break;
             }else{
@@ -1796,7 +1781,7 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
         updateElementStyle(all_texts[i], hasMatchingStyle);
 
         //add setting if it doesn't exist
-        var hasSettings=ifStylesavedInSettings(document, all_settings,new_styles, hasMatchingStyle.id, "text");
+        var hasSettings=ifStylesavedInSettings(document, all_settings_t,new_styles, hasMatchingStyle.id, "text");
         if(!hasSettings){
           new_styles.push({"action":"link", "type": "text","colored_container":is_inside_colored_container,  "id":hasMatchingStyle.id, "layerName": all_texts[i].name});
         
@@ -1809,7 +1794,7 @@ export function syncLayerwithStyles_best(Settings, sketch, document, page){
       updateElementStyle(all_texts[i], hasStyle);
 
       //add setting if it doesn't exist
-      var hasSettings=ifStylesavedInSettings(document, all_settings,new_styles, hasStyle.id, "text");
+      var hasSettings=ifStylesavedInSettings(document, all_settings_t,new_styles, hasStyle.id, "text");
       if(!hasSettings){
         var is_inside_colored_container= TextinsideColoredContainer(all_texts[i], colored_containers);
         new_styles.push({"action":"save_setting", "type": "text", "colored_container":is_inside_colored_container,  "id":hasStyle.id, "layerName": all_texts[i].name});
@@ -1860,7 +1845,7 @@ function getFrameAbsoluteFrame(p){
   }
   return {"x":sum_x, "y":sum_y};
 }
-function elementHasMatchingStyle(all_styles, style){
+function elementHasMatchingStyle(all_styles, style, this_settings){
   var repeated=false;
   //console.log(all_styles);
  
@@ -1879,6 +1864,74 @@ function elementHasMatchingStyle(all_styles, style){
   
 
 }
+
+function elementHasMatchingStyleAndSetting(document, all_styles, style, this_settings, otherSettings, otherSettings_2, is_inside_colored_container, type){
+  var repeated=false;
+  var is_in_my_setting=false;
+  var is_in_other_Setting=false;
+  //console.log(all_styles);
+  for (var n=0; n<this_settings.length; n++){
+      if(type[0] == "layer"){
+        var setting_style= document.getSharedLayerStyleWithID(this_settings[n].light);
+      }else{
+        var setting_style= document.getSharedTextStyleWithID(this_settings[n].light);
+      }
+      var isOutOfSync = style.isOutOfSyncWithSharedStyle(setting_style);
+
+      if(!isOutOfSync && this_settings[n].colored_container == is_inside_colored_container){
+        is_in_my_setting=true;
+        repeated=setting_style;
+        break;
+      }
+  }
+  if(!is_in_my_setting){
+    for (var n=0; n<otherSettings.length; n++){
+      if(type[1] == "layer"){
+        var setting_style= document.getSharedLayerStyleWithID(otherSettings[n].light);
+      }else{
+        var setting_style= document.getSharedTextStyleWithID(otherSettings[n].light);
+      }
+      var isOutOfSync = style.isOutOfSyncWithSharedStyle(setting_style);
+      //var originLibrary = all_styles[i].getLibrary();
+      if(!isOutOfSync){
+        is_in_other_Setting=true;
+        break;
+        }
+    }
+  }
+  if(!is_in_my_setting && !is_in_other_Setting){
+    for (var n=0; n<otherSettings_2.length; n++){
+      if(type[2] == "layer"){
+        var setting_style= document.getSharedLayerStyleWithID(otherSettings_2[n].light);
+      }else{
+        var setting_style= document.getSharedTextStyleWithID(otherSettings_2[n].light);
+      }
+      var isOutOfSync = style.isOutOfSyncWithSharedStyle(setting_style);
+      //var originLibrary = all_styles[i].getLibrary();
+      if(!isOutOfSync){
+        is_in_other_Setting=true;
+        break;
+        }
+    }
+  }
+
+  if(!is_in_my_setting && !is_in_other_Setting ){
+    for(var i= 0; i< all_styles.length; i++){
+      var isOutOfSync = style.isOutOfSyncWithSharedStyle(all_styles[i]);
+      var originLibrary = all_styles[i].getLibrary();
+
+      if(!isOutOfSync && originLibrary==null){
+        repeated=all_styles[i];
+        break;
+      }
+    }
+  }
+  
+  return repeated;
+  
+
+}
+
 
 function ifStylesavedInSettings(document, all_settings, new_styles,  style_id, type){
   var repeated=false;
@@ -1920,14 +1973,18 @@ function ifStylesavedInSettings(document, all_settings, new_styles,  style_id, t
 }
 
 export function createDarkModeStyle(Settings, document,styles_layer,styles_text, new_styles ){
-  sketch.UI.message(' Doing step 2,  Creating Dark Mode......'); 
 
     console.log(".........................................");
     console.log("Step 2 - Create Dark Mode Layer Styles...");
     var percentage_layer=0;
     var percentage_text=0;
     
-    var s_styles= Settings.settingForKey('Styles');
+    var s_styles= Settings.documentSettingForKey(document,'Styles');
+    var s_styles_c= Settings.documentSettingForKey(document,'Styles_Containers');
+    var s_styles_l= Settings.documentSettingForKey(document,'Styles_Layers');
+    var s_styles_t= Settings.documentSettingForKey(document,'Styles_Texts');
+
+ 
     //layer color
     var new_styles_layer= styles_layer;
     var new_styles_text= styles_text;
@@ -2034,7 +2091,14 @@ export function createDarkModeStyle(Settings, document,styles_layer,styles_text,
         }
 
         //add setting
-        s_styles.push({"type": "layer", "element":new_styles[i].element, "light": shared_style.id, "dark":new_styles_layer[last_style].id})
+        s_styles.push({"type": "layer","colored_container": new_styles[i].colored_container, "element":new_styles[i].element, "light": shared_style.id, "dark":new_styles_layer[last_style].id})
+
+        if(new_styles[i].element==="small" ){
+          s_styles_l.push({"type": "layer","colored_container": new_styles[i].colored_container, "element":new_styles[i].element, "light": shared_style.id, "dark":new_styles_layer[last_style].id})
+        }else{
+          s_styles_c.push({"type": "layer", "colored_container": new_styles[i].colored_container, "element":new_styles[i].element, "light": shared_style.id, "dark":new_styles_layer[last_style].id})
+
+        }
         //console.log({"type": "layer", "light": shared_style.id, "dark":new_styles_layer[last_style].id});
         //console.log( shared_style.id);
       //CREATE TEXT LAYER
@@ -2064,7 +2128,7 @@ export function createDarkModeStyle(Settings, document,styles_layer,styles_text,
         var last_style=new_styles_text.length-1;
 
         if(new_styles[i].colored_container==true ){
-          transformMode= "in_colored_container";
+            transformMode= "in_colored_container";
           }else{
             transformMode= "Text";
           }
@@ -2075,12 +2139,13 @@ export function createDarkModeStyle(Settings, document,styles_layer,styles_text,
         var newcolor= transformColor(layer_style_color, transformMode);
 
         new_styles_text[last_style].style.textColor= newcolor;
-        s_styles.push({"type": "text", "element":"text", "light": shared_style.id, "dark":new_styles_text[last_style].id})
+        s_styles.push({"type": "text","colored_container":new_styles[i].colored_container,  "element":"text", "light": shared_style.id, "dark":new_styles_text[last_style].id})
+        s_styles_t.push({"type": "text","colored_container": new_styles[i].colored_container, "element":"text", "light": shared_style.id, "dark":new_styles_text[last_style].id})
         
       }
     }
     
-    return {"layer":new_styles_layer, "text":new_styles_text, "settings": s_styles};
+    return {"layer":new_styles_layer, "text":new_styles_text, "settings": s_styles, "settings_c": s_styles_c , "settings_l": s_styles_l, "settings_t": s_styles_t};
 
 }
 
@@ -2132,7 +2197,7 @@ export function SwitchDarkMode_best(Settings, sketch, document, page , layer_sty
     var all_shapes= sketch.find('Shape', document.pages[page]);
     var all_shapesPaths= sketch.find('ShapePath', document.pages[page]);
     var all_texts= sketch.find('Text', document.pages[page]);
-    var all_settings= Settings.settingForKey( 'Styles');
+    var all_settings= Settings.documentSettingForKey(document, 'Styles');
 
     if(dark){
       var this_mode="lightMode";
