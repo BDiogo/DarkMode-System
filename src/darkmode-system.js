@@ -43,6 +43,9 @@ export function createDarkmode(context) {
 
 
 function DarkModeSystem(context,type) {
+  if(document.colorSpace !== ColorSpace.P3){
+    document.changeColorSpace(ColorSpace.P3, true);
+  }
   var labels_alignments =[ "Left", "Right", "Center"];
 
   var pluginName = "DarkMode System",
