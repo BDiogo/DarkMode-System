@@ -43,9 +43,11 @@ export function createDarkmode(context) {
 
 
 function DarkModeSystem(context,type) {
+  /*
   if(document.colorSpace !== ColorSpace.P3){
     document.changeColorSpace(ColorSpace.P3, true);
   }
+  */
   var labels_alignments =[ "Left", "Right", "Center"];
 
   var pluginName = "DarkMode System",
@@ -109,7 +111,6 @@ function DarkModeSystem(context,type) {
     
     //create Modal
     var s_colors= Settings.documentSettingForKey(document, 'colors');
-
 
 		var alert = NSAlert.alloc().init(),
 		alertIconPath = context.plugin.urlForResourceNamed("icon.png").path(),
@@ -191,10 +192,20 @@ function DarkModeSystem(context,type) {
   
   
       if (responseCode == 1000) { //create dark mode 
-          var all_settings= Settings.documentSettingForKey(document, 'Styles');
+          var all_settings_l= Settings.documentSettingForKey(document, 'Styles_Layers');
+          var reviewed_Settings_l= functions.reviewSettings( document, all_settings_l);
+          Settings.setDocumentSettingForKey(document, 'Styles_Layers', reviewed_Settings_l);
 
-          var reviewed_Settings= functions.reviewSettings( document, all_settings);
-          Settings.setDocumentSettingForKey(document, 'Styles', reviewed_Settings);
+
+          var all_settings_c= Settings.documentSettingForKey(document, 'Styles_Containers');
+          var reviewed_Settings_c= functions.reviewSettings( document, all_settings_c);
+          Settings.setDocumentSettingForKey(document, 'Styles_Containers', reviewed_Settings_c);
+
+          var all_settings_t= Settings.documentSettingForKey(document, 'Styles_Texts');
+          var reviewed_Settings_t= functions.reviewSettings( document, all_settings_t);
+          Settings.setDocumentSettingForKey(document, 'Styles_Texts', reviewed_Settings_t);
+
+          
 
         
           var s_page= selected_page.indexOfSelectedItem();
@@ -392,11 +403,10 @@ function DarkModeSystem(context,type) {
 
     windowHeight = 460;
     windowWidth = 800;
-    var all_settings= Settings.documentSettingForKey(document, 'Styles');
     var all_settings_c= Settings.documentSettingForKey(document, 'Styles_Containers');
     var all_settings_l= Settings.documentSettingForKey(document, 'Styles_Layers');
     var all_settings_t= Settings.documentSettingForKey(document, 'Styles_Texts');
-    var scrolHeight= ((all_settings.length*(labelHeight+settingPad))+100)*2;
+    var scrolHeight= (((all_settings_c.length+all_settings_l.length+all_settings_t.length)*(labelHeight+settingPad)))*2;
 
 		var alert = NSAlert.alloc().init(),
 		alertIconPath = context.plugin.urlForResourceNamed("icon.png").path(),
@@ -434,6 +444,7 @@ function DarkModeSystem(context,type) {
 
     for(var j=0; j<3; j++){
       var i=0;
+      var all_settings;
 
       if(j==0){
             all_settings= all_settings_c;
@@ -533,20 +544,37 @@ function DarkModeSystem(context,type) {
     var responseCode = alert.runModal();
    // log(styles_list);
     if (responseCode == 1000) {
-      var all_settings= Settings.documentSettingForKey(document, 'Styles');
+      var all_settings_c= Settings.documentSettingForKey(document, 'Styles_Containers');
+      var all_settings_l= Settings.documentSettingForKey(document, 'Styles_Layers');
+      var all_settings_t= Settings.documentSettingForKey(document, 'Styles_Texts');
 
-      sketch.UI.message(' Deleted All! '+all_settings.length+' styles, sucessfully!');
-      Settings.setDocumentSettingForKey('Styles', []);
+
+      Settings.setDocumentSettingForKey(document, 'Styles_Containers', []);
+      Settings.setDocumentSettingForKey(document, 'Styles_Layers', []);
+      Settings.setDocumentSettingForKey(document, 'Styles_Texts', []);
+
+
+   
+      sketch.UI.message(' Deleted All! '+all_settings_c.length+' '+all_settings_l.length+' '+all_settings_t.length+' stylesmmm, sucessfully!');
+
 
     }else if (responseCode == 1001) {
-      var all_settings= Settings.documentSettingForKey(document, 'Styles');
+      var all_settings_l= Settings.documentSettingForKey(document, 'Styles_Layers');
+      var reviewed_Settings_l= functions.reviewSettings( document, all_settings_l);
+      Settings.setDocumentSettingForKey(document, 'Styles_Layers', reviewed_Settings_l);
 
-      var reviewed_Settings= functions.reviewSettings( document , all_settings);
-      Settings.setDocumentSettingForKey('Styles', reviewed_Settings);
 
-      var deleted= all_settings.length-reviewed_Settings.length;
+      var all_settings_c= Settings.documentSettingForKey(document, 'Styles_Containers');
+      var reviewed_Settings_c= functions.reviewSettings( document, all_settings_c);
+      Settings.setDocumentSettingForKey(document, 'Styles_Containers', reviewed_Settings_c);
 
-      sketch.UI.message(' Deleted '+deleted+' Settings , sucessfully! You now have '+reviewed_Settings.length+" Settings!");
+      var all_settings_t= Settings.documentSettingForKey(document, 'Styles_Texts');
+      var reviewed_Settings_t= functions.reviewSettings( document, all_settings_t);
+      Settings.setDocumentSettingForKey(document, 'Styles_Texts', reviewed_Settings_t);
+
+      var deleted= (all_settings_c.length-reviewed_Settings_c.length)+ (all_settings_t.length-reviewed_Settings_t.length)+ (all_settings_l.length-reviewed_Settings_l.length);
+
+      sketch.UI.message(' Deleted '+deleted+' Settings , sucessfully! You now have '+(reviewed_Settings_c.length+reviewed_Settings_t.length+reviewed_Settings_l.length)+" Settings!");
 
     }
 
