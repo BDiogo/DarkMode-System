@@ -3,7 +3,7 @@
   "icon": "icon.png",
   "name" : "Dark Mode System",
   "identifier" : "darkmodesystem",
-  "version" : "0.1",
+  "version" : "1.0",
   "description" : "A Plugin that applys a Dark Theme to your Project",
   "authorEmail" : "beanes.diogo@gmail.com",
   "author" : "Beatriz Diogo",
