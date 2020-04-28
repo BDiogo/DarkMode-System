@@ -1,7 +1,7 @@
 {
   "name": "darkmodesystem",
   "description": "",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "engines": {
     "sketch": ">=49.0"
   },
@@ -14,9 +14,9 @@
     ],
     "sketch-assets-file": "sketch-assets/icons.sketch"
   },
-  "repository" : {
-     "type": "git",
-     "url": "git+https://github.com/BDiogo/DarkMode-System.git"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BDiogo/DarkMode-System.git"
   },
   "scripts": {
     "build": "skpm-build",
