@@ -2,8 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/BohemianCoding/SketchAPI/develop/docs/sketch-plugin-manifest-schema.json",
   "icon": "icon.png",
   "name": "Dark Mode System",
+  "appcast": "https://raw.githubusercontent.com/BDiogo/DarkMode-System/master/.appcast.xml",
   "identifier": "darkmodesystem",
-  "version": "1.0",
+  "version": "1.0.0",
   "description": "A Plugin that applys a Dark Theme to your Project",
   "authorEmail": "beanes.diogo@gmail.com",
   "author": "Beatriz Diogo",
@@ -57,6 +58,5 @@
       "darkmodesystem.switchLight"
     ]
   },
-  "disableCocoaScriptPreprocessor": true,
-  "appcast": "https://raw.githubusercontent.com/BDiogo/DarkMode-System/master/.appcast.xml"
+  "disableCocoaScriptPreprocessor": true
 }
